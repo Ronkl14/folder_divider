@@ -1,5 +1,4 @@
 import flet as ft
-
 from controller import divide_and_copy_files
 
 def start_processing(e, source_folder, target_folders, parallel_copying, page):
@@ -17,77 +16,50 @@ def on_result(e: ft.FilePickerResultEvent, label: ft.Text):
         label.value = folder_path
         label.update()
 
-def update_folder_labels(target_folders, container):
-    for idx, (button, label, delete_button) in enumerate(target_folders):
-        button.text = f"Select Target Folder {idx + 1}"
-        button.on_click = lambda _, idx=idx: target_folders[idx][2].get_directory_path(dialog_title=f"Select Target Folder {idx + 1}")
-        button.update()
-
-def add_target_folder(page: ft.Page, target_folders, target_folder_pickers, container):
-    idx = len(target_folders)
-    target_folder_label = ft.Text(value="No folder selected", width=400)
-    target_folder_picker = ft.FilePicker(on_result=lambda e, idx=idx: on_result(e, target_folder_label))
-    target_folder_pickers.append(target_folder_picker)
+def on_number_of_folders_submit(e, page: ft.Page, input_field: ft.TextField):
+    try:
+        target_folder_count = int(input_field.value)
+        if target_folder_count <= 0:
+            raise ValueError("Number of folders must be positive.")
+    except ValueError:
+        page.add(ft.Text("Please enter a valid positive integer for the number of target folders."))
+        page.update()
+        return
     
-    target_folder_button = ft.ElevatedButton(
-        f"Select Target Folder {idx + 1}",
-        on_click=lambda _, idx=idx: target_folder_picker.get_directory_path(dialog_title=f"Select Target Folder {idx + 1}")
-    )
+    page.clean()
+    view = create_window(page, target_folder_count)
+    page.add(view)
 
-    delete_button = ft.IconButton(
-        icon=ft.icons.DELETE, 
-        on_click=lambda e, idx=idx: delete_target_folder(idx, target_folders, target_folder_pickers, container, page)
-    )
-
-    target_folders.append((target_folder_button, target_folder_label, target_folder_picker))
-    container.controls.append(ft.Row([target_folder_button, target_folder_label, delete_button]))
-    
-    page.overlay.append(target_folder_picker)
-    page.update()
-
-def delete_target_folder(idx, target_folders, target_folder_pickers, container, page):
-    # Remove the selected folder, picker, and UI elements
-    del target_folders[idx]
-    del target_folder_pickers[idx]
-    del container.controls[idx]
-    
-    # Update the text and on_click events for the remaining folders to have correct indices
-    for new_idx, (button, label, picker) in enumerate(target_folders):
-        button.text = f"Select Target Folder {new_idx + 1}"
-        button.on_click = lambda e, new_idx=new_idx: picker.get_directory_path(dialog_title=f"Select Target Folder {new_idx + 1}")
-        button.update()
-    
-    # Refresh the UI
-    page.update()
-
-def create_window(page: ft.Page):
+def create_window(page: ft.Page, target_folder_count: int):
     source_folder_label = ft.Text(value="No folder selected", width=400)
     
-    target_folders = []
+    target_folder_labels = []
+    target_folder_buttons = []
     target_folder_pickers = []
     
-    container = ft.Column()
-
-    # Add default target folders
-    for _ in range(2):
-        add_target_folder(page, target_folders, target_folder_pickers, container)
+    for i in range(target_folder_count):
+        target_folder_label = ft.Text(value="No folder selected", width=400)
+        target_folder_button = ft.ElevatedButton(
+            f"Select Target Folder {i + 1}", 
+            on_click=lambda _, idx=i: target_folder_pickers[idx].get_directory_path(dialog_title=f"Select Target Folder {idx + 1}")
+        )
+        
+        target_folder_labels.append(target_folder_label)
+        target_folder_buttons.append(target_folder_button)
     
     source_folder_picker = ft.FilePicker(on_result=lambda e: on_result(e, source_folder_label))
+    target_folder_pickers = [ft.FilePicker(on_result=lambda e, idx=i: on_result(e, target_folder_labels[idx])) for i in range(target_folder_count)]
+
     source_folder_button = ft.ElevatedButton(
-        "Select Source Folder",
+        "Select Source Folder", 
         on_click=lambda _: source_folder_picker.get_directory_path(dialog_title="Select Source Folder")
     )
 
     parallel_copying_checkbox = ft.Checkbox(label="Enable Parallel Copying", value=False)
 
-    add_folder_button = ft.ElevatedButton(
-        "Add Target Folder",
-        on_click=lambda e: add_target_folder(page, target_folders, target_folder_pickers, container)
-    )
-
     start_button = ft.ElevatedButton(
         "Start Processing",
-        on_click=lambda e: start_processing(e, source_folder_label, [label for _, label, _ in target_folders], parallel_copying_checkbox, page)
+        on_click=lambda e: start_processing(e, source_folder_label, target_folder_labels, parallel_copying_checkbox, page)
     )
 
     view = ft.Column(
@@ -97,8 +69,11 @@ def create_window(page: ft.Page):
             source_folder_label,
             ft.Divider(),
             ft.Text("Target Folders:", size=20),
-            container,
-            add_folder_button,
+            *[
+                elem
+                for pair in zip(target_folder_buttons, target_folder_labels)
+                for elem in pair
+            ],
             ft.Divider(),
             parallel_copying_checkbox,
             start_button
@@ -107,7 +82,7 @@ def create_window(page: ft.Page):
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
     )
 
-    page.overlay.append(source_folder_picker)
+    page.overlay.extend([source_folder_picker] + target_folder_pickers)
 
     return view
 
@@ -116,7 +91,16 @@ def main(page: ft.Page):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
-    view = create_window(page)
-    page.add(view)
+    input_field = ft.TextField(label="Enter number of target folders:", width=200)
+    submit_button = ft.ElevatedButton("Submit", on_click=lambda e: on_number_of_folders_submit(e, page, input_field))
+
+    page.add(ft.Column(
+        [
+            input_field,
+            submit_button,
+        ],
+        alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+    ))
 
 # ft.app(target=main)
