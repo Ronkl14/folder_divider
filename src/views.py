@@ -4,7 +4,7 @@ from controller import divide_and_copy_files
 def create_progress_callback(progress_bar):
     def _update_progress(value):
         progress_bar.value = value
-        progress_bar.page.update()  # Ensure the page updates to reflect progress
+        progress_bar.page.update()
     return _update_progress
 
 def start_processing(e, source_folder, target_folders, parallel_copying, progress_bars, page):
@@ -39,7 +39,7 @@ def on_number_of_folders_submit(e, page: ft.Page, input_field: ft.TextField):
         return
     
     page.clean()
-    view = create_window(page, target_folder_count)  # Get the view only
+    view = create_window(page, target_folder_count) 
     page.add(view) 
 
 def create_window(page: ft.Page, target_folder_count: int):
