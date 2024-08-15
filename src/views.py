@@ -44,7 +44,7 @@ def on_number_of_folders_submit(e, page: ft.Page, input_field: ft.TextField):
 
 def create_window(page: ft.Page, target_folder_count: int):
     source_folder_label = ft.Text(value="No folder selected", width=400)
-    
+
     target_folder_labels = []
     target_folder_buttons = []
     target_folder_pickers = []
@@ -58,11 +58,11 @@ def create_window(page: ft.Page, target_folder_count: int):
         )
         
         progress_bar = ft.ProgressBar(value=0, width=400)
-        progress_bars.append(progress_bar)
-
+        
         target_folder_labels.append(target_folder_label)
         target_folder_buttons.append(target_folder_button)
-    
+        progress_bars.append(progress_bar)
+
     source_folder_picker = ft.FilePicker(on_result=lambda e: on_result(e, source_folder_label))
     target_folder_pickers = [ft.FilePicker(on_result=lambda e, idx=i: on_result(e, target_folder_labels[idx])) for i in range(target_folder_count)]
 
@@ -78,6 +78,14 @@ def create_window(page: ft.Page, target_folder_count: int):
         on_click=lambda e: start_processing(e, source_folder_label, target_folder_labels, parallel_copying_checkbox, progress_bars, page)
     )
 
+    target_folder_views = []
+    for i in range(target_folder_count):
+        target_folder_views.append(ft.Column([
+            target_folder_buttons[i],  
+            target_folder_labels[i],   
+            progress_bars[i]      
+        ]))
+
     view = ft.Column(
         [
             ft.Text("Source Folder:", size=20),
@@ -85,13 +93,8 @@ def create_window(page: ft.Page, target_folder_count: int):
             source_folder_label,
             ft.Divider(),
             ft.Text("Target Folders:", size=20),
-            *[
-                elem
-                for pair in zip(target_folder_buttons, target_folder_labels)
-                for elem in pair
-            ],
+            *target_folder_views, 
             ft.Divider(),
-            *progress_bars,
             parallel_copying_checkbox,
             start_button
         ],
@@ -101,7 +104,7 @@ def create_window(page: ft.Page, target_folder_count: int):
 
     page.overlay.extend([source_folder_picker] + target_folder_pickers)
 
-    return view 
+    return view
 
 def main(page: ft.Page):
     page.title = "Folder Selector"
