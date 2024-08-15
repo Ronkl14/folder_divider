@@ -1,9 +1,21 @@
 import flet as ft
 from controller import divide_and_copy_files
 
-def start_processing(e, source_folder, target_folders, parallel_copying, page, progress_bars):
+def create_progress_callback(progress_bar):
+    def _update_progress(value):
+        progress_bar.value = value
+        progress_bar.page.update()  # Ensure the page updates to reflect progress
+    return _update_progress
+
+def start_processing(e, source_folder, target_folders, parallel_copying, progress_bars, page):
     if source_folder.value != "No folder selected" and all(f.value != "No folder selected" for f in target_folders):
-        divide_and_copy_files(source_folder.value, [f.value for f in target_folders], parallel_copying.value, progress_bars, page)
+        progress_callbacks = [create_progress_callback(pb) for pb in progress_bars]
+        divide_and_copy_files(
+            source_folder.value, 
+            [f.value for f in target_folders], 
+            parallel_copying.value,
+            progress_callbacks
+        )
         page.add(ft.Text("Files have been successfully copied!"))
         page.update()
     else:
@@ -27,8 +39,8 @@ def on_number_of_folders_submit(e, page: ft.Page, input_field: ft.TextField):
         return
     
     page.clean()
-    view, progress_bars = create_window(page, target_folder_count)
-    page.add(view)
+    view = create_window(page, target_folder_count)  # Get the view only
+    page.add(view) 
 
 def create_window(page: ft.Page, target_folder_count: int):
     source_folder_label = ft.Text(value="No folder selected", width=400)
@@ -37,7 +49,7 @@ def create_window(page: ft.Page, target_folder_count: int):
     target_folder_buttons = []
     target_folder_pickers = []
     progress_bars = []
-    
+
     for i in range(target_folder_count):
         target_folder_label = ft.Text(value="No folder selected", width=400)
         target_folder_button = ft.ElevatedButton(
@@ -45,10 +57,11 @@ def create_window(page: ft.Page, target_folder_count: int):
             on_click=lambda _, idx=i: target_folder_pickers[idx].get_directory_path(dialog_title=f"Select Target Folder {idx + 1}")
         )
         
-        progress_bar = ft.ProgressBar(value=0.0, width=400)  # Fractional value
+        progress_bar = ft.ProgressBar(value=0, width=400)
+        progress_bars.append(progress_bar)
+
         target_folder_labels.append(target_folder_label)
         target_folder_buttons.append(target_folder_button)
-        progress_bars.append(progress_bar)
     
     source_folder_picker = ft.FilePicker(on_result=lambda e: on_result(e, source_folder_label))
     target_folder_pickers = [ft.FilePicker(on_result=lambda e, idx=i: on_result(e, target_folder_labels[idx])) for i in range(target_folder_count)]
@@ -62,7 +75,7 @@ def create_window(page: ft.Page, target_folder_count: int):
 
     start_button = ft.ElevatedButton(
         "Start Processing",
-        on_click=lambda e: start_processing(e, source_folder_label, target_folder_labels, parallel_copying_checkbox, page, progress_bars)
+        on_click=lambda e: start_processing(e, source_folder_label, target_folder_labels, parallel_copying_checkbox, progress_bars, page)
     )
 
     view = ft.Column(
@@ -77,8 +90,8 @@ def create_window(page: ft.Page, target_folder_count: int):
                 for pair in zip(target_folder_buttons, target_folder_labels)
                 for elem in pair
             ],
-            *progress_bars,
             ft.Divider(),
+            *progress_bars,
             parallel_copying_checkbox,
             start_button
         ],
@@ -88,7 +101,7 @@ def create_window(page: ft.Page, target_folder_count: int):
 
     page.overlay.extend([source_folder_picker] + target_folder_pickers)
 
-    return view, progress_bars
+    return view 
 
 def main(page: ft.Page):
     page.title = "Folder Selector"
