@@ -18,8 +18,7 @@ def copy_files_to_folder(group, source_folder, target_folder, update_progress):
             futures.append(future)
         
         for idx, future in enumerate(as_completed(futures)):
-            # As each file copy completes, update progress
-            future.result()  # This is where you can catch exceptions
+            future.result()
             progress = (idx + 1) / total_files
             update_progress(progress)
 
