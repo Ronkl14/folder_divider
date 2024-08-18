@@ -1,5 +1,7 @@
 # Folder Divider
 
+Google Drive: https://drive.google.com/drive/folders/1DwTNSnnhiwOZTvIyCbZofAewsttC98lk?usp=sharing
+
 ## Overview
 
 Folder Divider is a Python application that allows users to select a source folder and multiple target folders to divide and copy files. The application supports both parallel and sequential copying of files.
