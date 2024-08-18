@@ -7,14 +7,15 @@ def create_progress_callback(progress_bar):
         progress_bar.page.update()
     return _update_progress
 
-def start_processing(e, source_folder, target_folders, parallel_copying, progress_bars, page):
+def start_processing(e, source_folder, target_folders, parallel_copying, progress_bars, page, selected_file_type):
     if source_folder.value != "No folder selected" and all(f.value != "No folder selected" for f in target_folders):
         progress_callbacks = [create_progress_callback(pb) for pb in progress_bars]
         divide_and_copy_files(
             source_folder.value, 
             [f.value for f in target_folders], 
             parallel_copying.value,
-            progress_callbacks
+            progress_callbacks,
+            selected_file_type
         )
         page.add(ft.Text("Files have been successfully copied!"))
         page.update()
@@ -28,7 +29,7 @@ def on_result(e: ft.FilePickerResultEvent, label: ft.Text):
         label.value = folder_path
         label.update()
 
-def on_number_of_folders_submit(e, page: ft.Page, input_field: ft.TextField):
+def on_number_of_folders_submit(e, page: ft.Page, input_field: ft.TextField, file_type_dropdown: ft.Dropdown ):
     try:
         target_folder_count = int(input_field.value)
         if target_folder_count <= 0:
@@ -38,11 +39,12 @@ def on_number_of_folders_submit(e, page: ft.Page, input_field: ft.TextField):
         page.update()
         return
     
+    selected_file_type = file_type_dropdown.value
     page.clean()
-    view = create_window(page, target_folder_count) 
+    view = create_window(page, target_folder_count, selected_file_type) 
     page.add(view) 
 
-def create_window(page: ft.Page, target_folder_count: int):
+def create_window(page: ft.Page, target_folder_count: int, selected_file_type: str):
     source_folder_label = ft.Text(value="No folder selected", width=400)
 
     target_folder_labels = []
@@ -75,7 +77,7 @@ def create_window(page: ft.Page, target_folder_count: int):
 
     start_button = ft.ElevatedButton(
         "Start Processing",
-        on_click=lambda e: start_processing(e, source_folder_label, target_folder_labels, parallel_copying_checkbox, progress_bars, page)
+        on_click=lambda e: start_processing(e, source_folder_label, target_folder_labels, parallel_copying_checkbox, progress_bars, page, selected_file_type)
     )
 
     target_folder_views = []
@@ -112,11 +114,13 @@ def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
     input_field = ft.TextField(label="Enter number of target folders:", width=200)
-    submit_button = ft.ElevatedButton("Submit", on_click=lambda e: on_number_of_folders_submit(e, page, input_field))
+    file_type_dropdown = ft.Dropdown(label="Select mode", options=[ft.dropdown.Option('.raw + .txt'), ft.dropdown.Option('.jp2 + .json')], value=".raw + .txt", width=200)
+    submit_button = ft.ElevatedButton("Submit", on_click=lambda e: on_number_of_folders_submit(e, page, input_field, file_type_dropdown))
 
     page.add(ft.Column(
         [
             input_field,
+            file_type_dropdown,
             submit_button,
         ],
         alignment=ft.MainAxisAlignment.CENTER,

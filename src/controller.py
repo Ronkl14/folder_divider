@@ -22,9 +22,14 @@ def copy_files_to_folder(group, source_folder, target_folder, update_progress):
             progress = (idx + 1) / total_files
             update_progress(progress)
 
-def divide_and_copy_files(source_folder: str, target_folders: list, parallel_copying: bool, progress_callbacks):
-    raw_files = [f for f in os.listdir(source_folder) if f.endswith('.raw')]
-    
+
+def divide_and_copy_files(source_folder: str, target_folders: list, parallel_copying: bool, progress_callbacks, file_extension_mode: str):
+    if file_extension_mode == ".raw + .txt":
+        raw_files = [f for f in os.listdir(source_folder) if f.endswith('.raw')]
+        unknown_files = [f for f in os.listdir(source_folder) if not f.endswith('.raw')]
+    elif file_extension_mode == ".jp2 + .json":
+        raw_files = [f for f in os.listdir(source_folder) if f.endswith('.jp2')]
+
     num_groups = len(target_folders)
     group_size = math.ceil(len(raw_files) / num_groups)
 
@@ -47,8 +52,16 @@ def divide_and_copy_files(source_folder: str, target_folders: list, parallel_cop
             copy_files_to_folder(group, source_folder, target_folder, progress_callbacks[i])
             progress_callbacks[i](1.0)
 
-    unknown_files = [f for f in os.listdir(source_folder) if not f.endswith('.raw')]
-    if unknown_files:
+    if file_extension_mode == ".raw + .txt" and unknown_files:
         unknown_file = unknown_files[0]  # Assuming there is only one unknown file
         for target_folder in target_folders:
             shutil.copy(os.path.join(source_folder, unknown_file), target_folder)
+
+    elif file_extension_mode == ".jp2 + .json":
+        json_files = [f.replace('.jp2', '.json') for f in raw_files]
+        for i, target_folder in enumerate(target_folders):
+            group = raw_files[i*group_size : (i+1)*group_size]
+            json_group = json_files[i*group_size : (i+1)*group_size]
+            for jp2_file, json_file in zip(group, json_group):
+                shutil.copy(os.path.join(source_folder, jp2_file), target_folder)
+                shutil.copy(os.path.join(source_folder, json_file), target_folder)
