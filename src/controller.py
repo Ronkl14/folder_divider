@@ -29,9 +29,9 @@ def copy_files_to_folder(group, source_folder, target_folder, update_progress, f
             update_progress(progress)
 
 def divide_and_copy_files(source_folder: str, target_folders: list, parallel_copying: bool, progress_callbacks, file_extension_mode: str):
-    if file_extension_mode == ".raw + .txt":
+    if file_extension_mode == ".raw + .tgv":
         raw_files = [f for f in os.listdir(source_folder) if f.endswith('.raw')]
-        unknown_files = [f for f in os.listdir(source_folder) if f.endswith('.txt')]
+        unknown_files = [f for f in os.listdir(source_folder) if f.endswith('.tgv')]
     elif file_extension_mode == ".jp2 + .json":
         raw_files = [f for f in os.listdir(source_folder) if f.endswith('.jp2')]
 
@@ -57,7 +57,7 @@ def divide_and_copy_files(source_folder: str, target_folders: list, parallel_cop
             copy_files_to_folder(group, source_folder, target_folder, progress_callbacks[i], file_extension_mode)
             progress_callbacks[i](1.0)
 
-    if file_extension_mode == ".raw + .txt" and unknown_files:
+    if file_extension_mode == ".raw + .tgv" and unknown_files:
         unknown_file = unknown_files[0]  # Assuming there is only one unknown file
         for target_folder in target_folders:
             shutil.copy(os.path.join(source_folder, unknown_file), target_folder)

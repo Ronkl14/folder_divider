@@ -127,7 +127,7 @@ def main(page: ft.Page):
     theme_switch = ft.Switch(label="Dark Mode", value=page.theme_mode == ft.ThemeMode.DARK, on_change=lambda e: toggle_theme(page, e.control))
     
     input_field = ft.TextField(label="Enter number of target folders:", width=200)
-    file_type_dropdown = ft.Dropdown(label="Select mode", options=[ft.dropdown.Option('.raw + .txt'), ft.dropdown.Option('.jp2 + .json')], value=".raw + .txt", width=200)
+    file_type_dropdown = ft.Dropdown(label="Select mode", options=[ft.dropdown.Option('.raw + .tgv'), ft.dropdown.Option('.jp2 + .json')], value=".raw + .tgv", width=200)
     submit_button = ft.ElevatedButton("Submit", on_click=lambda e: on_number_of_folders_submit(e, page, input_field, file_type_dropdown))
 
     page.add(ft.Column(
