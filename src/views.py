@@ -41,7 +41,7 @@ def on_number_of_folders_submit(e, page: ft.Page, input_field: ft.TextField, fil
     
     selected_file_type = file_type_dropdown.value
     page.clean()
-    view = create_window(page, target_folder_count, selected_file_type) 
+    view = create_window(page, target_folder_count, selected_file_type)
     page.add(view) 
 
 def create_window(page: ft.Page, target_folder_count: int, selected_file_type: str):
@@ -88,8 +88,11 @@ def create_window(page: ft.Page, target_folder_count: int, selected_file_type: s
             progress_bars[i]      
         ]))
 
+    theme_switch = ft.Switch(label="Dark Mode", value=page.theme_mode == ft.ThemeMode.DARK, on_change=lambda e: toggle_theme(page, e.control))
+
     view = ft.Column(
         [
+            theme_switch,
             ft.Text("Source Folder:", size=20),
             source_folder_button,
             source_folder_label,
@@ -108,17 +111,28 @@ def create_window(page: ft.Page, target_folder_count: int, selected_file_type: s
 
     return view
 
+def toggle_theme(page: ft.Page, switch: ft.Switch):
+    if switch.value:
+        page.theme_mode = ft.ThemeMode.DARK
+    else:
+        page.theme_mode = ft.ThemeMode.LIGHT
+    page.update()
+
 def main(page: ft.Page):
+    page.theme_mode = ft.ThemeMode.DARK
     page.title = "Folder Selector"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
+    theme_switch = ft.Switch(label="Dark Mode", value=page.theme_mode == ft.ThemeMode.DARK, on_change=lambda e: toggle_theme(page, e.control))
+    
     input_field = ft.TextField(label="Enter number of target folders:", width=200)
     file_type_dropdown = ft.Dropdown(label="Select mode", options=[ft.dropdown.Option('.raw + .txt'), ft.dropdown.Option('.jp2 + .json')], value=".raw + .txt", width=200)
     submit_button = ft.ElevatedButton("Submit", on_click=lambda e: on_number_of_folders_submit(e, page, input_field, file_type_dropdown))
 
     page.add(ft.Column(
         [
+            theme_switch,
             input_field,
             file_type_dropdown,
             submit_button,
