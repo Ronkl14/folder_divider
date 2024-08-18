@@ -26,7 +26,7 @@ def copy_files_to_folder(group, source_folder, target_folder, update_progress):
 def divide_and_copy_files(source_folder: str, target_folders: list, parallel_copying: bool, progress_callbacks, file_extension_mode: str):
     if file_extension_mode == ".raw + .txt":
         raw_files = [f for f in os.listdir(source_folder) if f.endswith('.raw')]
-        unknown_files = [f for f in os.listdir(source_folder) if not f.endswith('.raw')]
+        unknown_files = [f for f in os.listdir(source_folder) if f.endswith('.txt')]
     elif file_extension_mode == ".jp2 + .json":
         raw_files = [f for f in os.listdir(source_folder) if f.endswith('.jp2')]
 
