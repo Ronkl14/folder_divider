@@ -56,7 +56,7 @@ def divide_and_copy_files(source_folder: str, target_folders: list, parallel_cop
                     executor.submit(copy_file, source, target_folder)
                 progress_callbacks[i](1.0)
 
-    unknown_files = [f for f in os.listdir(source_folder) if not f.endswith('.raw')]
+    unknown_files = [f for f in os.listdir(source_folder) if f.endswith('.txt')]
     if unknown_files:
         unknown_file = unknown_files[0]  # Assuming there is only one unknown file
         with ThreadPoolExecutor() as executor:
